@@ -64,7 +64,7 @@ namespace Xyz.Anzfactory.NCMBUtil
                 postData.AddParam("password", password);
                 postData.AddParam("userName", userName);
                 postData.AddParam("nickname", DEFAULT_USER_NICKNAME);
-                StartCoroutine(Yoshinani.Instance.Call(Yoshinani.RequestType.POST, "users", postData, (isError, json) => {
+                Yoshinani.Instance.Call(Yoshinani.RequestType.POST, "users", postData, (isError, json) => {
                     if (!isError) {
                         this.registeredUser = JsonUtility.FromJson<User>(json);
                         if (!string.IsNullOrEmpty(this.registeredUser.objectId)) {
@@ -80,20 +80,20 @@ namespace Xyz.Anzfactory.NCMBUtil
                     }
 
                     callback(isError, this.registeredUser);
-                }));
+                });
             } else {
                 // 取得
                 var queryData = new Yoshinani.RequestData();
                 queryData.AddParam("userName", userName);
                 queryData.AddParam("password", password);
-                StartCoroutine(Yoshinani.Instance.Call(Yoshinani.RequestType.GET, "login", queryData, (isError, json) => {
+                Yoshinani.Instance.Call(Yoshinani.RequestType.GET, "login", queryData, (isError, json) => {
                     if (!isError) {
                         this.registeredUser = JsonUtility.FromJson<User>(json);
                         Yoshinani.Instance.SessionToken = this.registeredUser.sessionToken;
                     }
 
                     callback(isError, this.registeredUser);
-                }));
+                });
             }
 
         }
@@ -104,10 +104,10 @@ namespace Xyz.Anzfactory.NCMBUtil
 
             var putData = new Yoshinani.RequestData();
             putData.AddParam("nickname", nickname);
-            StartCoroutine(Yoshinani.Instance.Call(Yoshinani.RequestType.PUT, string.Format("users/{0}", this.registeredUser.objectId), putData, (isError, json) => {
+            Yoshinani.Instance.Call(Yoshinani.RequestType.PUT, string.Format("users/{0}", this.registeredUser.objectId), putData, (isError, json) => {
                 this.registeredUser.nickname = nickname;
                 callback(isError);
-            }));
+            });
         }
 
         public void SendScore(float newScore, bool isForce, Action<bool> callback)
@@ -124,7 +124,7 @@ namespace Xyz.Anzfactory.NCMBUtil
 
             var queryData = new Yoshinani.RequestData();
             queryData.AddParam("userObjectId", this.registeredUser.objectId);
-            StartCoroutine(Yoshinani.Instance.Call(Yoshinani.RequestType.GET, "Scores", queryData, (isError, json) => {
+            Yoshinani.Instance.Call(Yoshinani.RequestType.GET, "Scores", queryData, (isError, json) => {
                 if (!isError) {
                     var scores = JsonUtility.FromJson<Scores>(json);
                     var scoreData = new Yoshinani.RequestData();
@@ -137,20 +137,20 @@ namespace Xyz.Anzfactory.NCMBUtil
                         var aclFormat = @"{""*"":{""read"":true},""{0}"":{""read"":true,""write"":true}}";
                         var acl = MiniJSON.Json.Deserialize(aclFormat.Replace("{0}", this.registeredUser.objectId));
                         scoreData.AddParam("acl", acl);
-                        StartCoroutine(Yoshinani.Instance.Call(Yoshinani.RequestType.POST, "Scores", scoreData, (isError2, json2) => {
+                        Yoshinani.Instance.Call(Yoshinani.RequestType.POST, "Scores", scoreData, (isError2, json2) => {
                             if (!isError2) {
                                 PlayerPrefs.SetFloat(PREFS_KEY_HIGH_SCORE, newScore);
                             }
                             callback(isError2);
-                        }));
+                        });
                     } else if (isForce || newScore > scores.results[0].score) {
                         // 更新
-                        StartCoroutine(Yoshinani.Instance.Call(Yoshinani.RequestType.PUT, string.Format("Scores/{0}", scores.results[0].objectId), scoreData, (isError2, json2) => {
+                        Yoshinani.Instance.Call(Yoshinani.RequestType.PUT, string.Format("Scores/{0}", scores.results[0].objectId), scoreData, (isError2, json2) => {
                             if (!isError2) {
                                 PlayerPrefs.SetFloat(PREFS_KEY_HIGH_SCORE, newScore);
                             }
                             callback(isError2);
-                        }));
+                        });
                     } else {
                         // 更新必要なし
                         callback(true);
@@ -158,7 +158,7 @@ namespace Xyz.Anzfactory.NCMBUtil
                 } else {
                     callback(false);
                 }
-            }));
+            });
         }
 
         public void Top50(Action<List<Score>> callback)
@@ -166,10 +166,10 @@ namespace Xyz.Anzfactory.NCMBUtil
             var queryData = new Yoshinani.RequestData();
             queryData.Limit = 50;
             queryData.SortColumn = "-score";    // マイナスをつけると降順 つけないと昇順
-            StartCoroutine(Yoshinani.Instance.Call(Yoshinani.RequestType.GET, "Scores", queryData, (isError, json) => {
+            Yoshinani.Instance.Call(Yoshinani.RequestType.GET, "Scores", queryData, (isError, json) => {
                 var scores = JsonUtility.FromJson<Scores>(json);
                 callback(scores.results);
-            }));
+            });
         }
 
         public void SelfRank(Action<bool, int> callback)
@@ -178,7 +178,7 @@ namespace Xyz.Anzfactory.NCMBUtil
 
             var queryData = new Yoshinani.RequestData();
             queryData.AddParam("userObjectId", this.registeredUser.objectId);
-            StartCoroutine(Yoshinani.Instance.Call(Yoshinani.RequestType.GET, "Scores", queryData, (isError, json) => {
+            Yoshinani.Instance.Call(Yoshinani.RequestType.GET, "Scores", queryData, (isError, json) => {
                 if (!isError) {
                     var scores = JsonUtility.FromJson<Scores>(json);
                     if (scores.results.Count == 1) {
@@ -187,21 +187,21 @@ namespace Xyz.Anzfactory.NCMBUtil
                         w.Add("$gt", scores.results[0].score);
                         queryData.AddParam("score", w);
                         queryData.Count = true;
-                        StartCoroutine(Yoshinani.Instance.Call(Yoshinani.RequestType.GET, "Scores", queryData, (isError2, json2) => {
+                        Yoshinani.Instance.Call(Yoshinani.RequestType.GET, "Scores", queryData, (isError2, json2) => {
                             if (!isError2) {
                                 Dictionary<string, object> result = MiniJSON.Json.Deserialize(json2) as Dictionary<string, object>;
                                 callback(false, int.Parse(result["count"].ToString()) + 1);
                             } else {
                                 callback(false, 0);
                             }
-                        }));
+                        });
                     } else {
                         callback(false, 0);
                     }
                 } else {
                     callback(false, 0);
                 }
-            }));
+            });
         }
         #endregion
 
@@ -240,11 +240,14 @@ namespace Xyz.Anzfactory.NCMBUtil
             private string clientKey;
             private string timestamp;
             private string baseParamString;
+            private Requestor requestor;
 
             public string SessionToken { get; set; }
 
             public Yoshinani()
             {
+                var requestorObject = new GameObject("Yoshinani Requestor");
+                this.requestor = requestorObject.AddComponent<Requestor>();
             }
 
             public void Setup(string applicationKey, string clientKey)
@@ -258,7 +261,7 @@ namespace Xyz.Anzfactory.NCMBUtil
                 this.baseParamString = this.ParamString();
             }
                 
-            public IEnumerator Call(RequestType method, string pathPart, RequestData queryData, Action<bool, string> callback)
+            public void Call(RequestType method, string pathPart, RequestData queryData, Action<bool, string> callback)
             {
                 bool isAuthPath = (pathPart.IndexOf("users") == 0 || pathPart == "login");
                 string endpoint = this.Endpoint(pathPart, isAuthPath);
@@ -286,14 +289,15 @@ namespace Xyz.Anzfactory.NCMBUtil
                     request.SetRequestHeader(KEY_SESSION_TOKEN, this.SessionToken);
                 }
                 request.downloadHandler = new DownloadHandlerBuffer();
-                yield return request.Send();
 
-                if (request.isError) {
-                    Debug.LogError(request.error);
-                    callback(true, null);
-                } else {
-                    callback(false, request.downloadHandler.text);
-                }
+                this.requestor.Done(request, (requested) => {
+                    if (requested.isError) {
+                        Debug.LogError(requested.error);
+                        callback(true, null);
+                    } else {
+                        callback(false, requested.downloadHandler.text);
+                    }
+                });
             }
 
             private string Endpoint(string pathPart, bool includeClassesString)
@@ -397,6 +401,20 @@ namespace Xyz.Anzfactory.NCMBUtil
                     this.SortColumn = null;
                     this.Limit = 0;
                     this.Count = false;
+                }
+            }
+
+            private class Requestor: MonoBehaviour
+            {
+                public void Done(UnityWebRequest request, Action<UnityWebRequest> callback)
+                {
+                    StartCoroutine(_done(request, callback));
+                }
+                    
+                private IEnumerator _done(UnityWebRequest request, Action<UnityWebRequest> callback)
+                {
+                    yield return request.Send();
+                    callback(request);
                 }
             }
         }
