@@ -18,6 +18,10 @@ namespace Xyz.Anzfactory.NCMBUtil
     public class NCMBRanking : MonoBehaviour
     {
         private static readonly string DEFAULT_USER_NICKNAME = "No Name";
+        private static readonly string PREFS_KEY_USER_NAME = "ncmb.userName";
+        private static readonly string PREFS_KEY_USER_PASSWORD = "ncmb.userPassword";
+        private static readonly string PREFS_KEY_HIGH_SCORE = "ncmb.userHighScore";
+
 
         #region "Serialize Fields"
         [SerializeField] private string ApplicationKey;
@@ -49,8 +53,8 @@ namespace Xyz.Anzfactory.NCMBUtil
         #region "Public Methods"
         public void RegisterUser(Action<bool, User> callback)
         {
-            string userName = PlayerPrefs.GetString("ncmb.userName", "");
-            string password = PlayerPrefs.GetString("ncmb.userPassword", "");
+            string userName = PlayerPrefs.GetString(PREFS_KEY_USER_NAME, "");
+            string password = PlayerPrefs.GetString(PREFS_KEY_USER_PASSWORD, "");
 
             if (string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(password)) {
                 // 新規
@@ -68,8 +72,8 @@ namespace Xyz.Anzfactory.NCMBUtil
                             // apiコールに気を使いたいんだからケチケチせずにフルフルで返してほしいわー
                             this.registeredUser.nickname = DEFAULT_USER_NICKNAME;
                             Yoshinani.Instance.SessionToken = this.registeredUser.sessionToken;
-                            PlayerPrefs.SetString("ncmb.userName", userName);
-                            PlayerPrefs.SetString("ncmb.userPassword", password);
+                            PlayerPrefs.SetString(PREFS_KEY_USER_NAME, userName);
+                            PlayerPrefs.SetString(PREFS_KEY_USER_PASSWORD, password);
                         } else {
                             isError = true;
                         }
@@ -110,6 +114,14 @@ namespace Xyz.Anzfactory.NCMBUtil
         {
             Assert.IsTrue(this.registeredUser != null && !string.IsNullOrEmpty(this.registeredUser.objectId), "ユーザ認証が終わっていないみたい...");
 
+            float currentHighScore = PlayerPrefs.GetFloat(PREFS_KEY_HIGH_SCORE, 0f);
+            if (!isForce && currentHighScore >= newScore) {
+                Debug.Log("送信する必要ないよ！");
+                // 更新必要なし
+                callback(false);
+                return;
+            }
+
             var queryData = new Yoshinani.RequestData();
             queryData.AddParam("userObjectId", this.registeredUser.objectId);
             StartCoroutine(Yoshinani.Instance.Call(Yoshinani.RequestType.GET, "Scores", queryData, (isError, json) => {
@@ -126,12 +138,17 @@ namespace Xyz.Anzfactory.NCMBUtil
                         var acl = MiniJSON.Json.Deserialize(aclFormat.Replace("{0}", this.registeredUser.objectId));
                         scoreData.AddParam("acl", acl);
                         StartCoroutine(Yoshinani.Instance.Call(Yoshinani.RequestType.POST, "Scores", scoreData, (isError2, json2) => {
+                            if (!isError2) {
+                                PlayerPrefs.SetFloat(PREFS_KEY_HIGH_SCORE, newScore);
+                            }
                             callback(isError2);
                         }));
                     } else if (isForce || newScore > scores.results[0].score) {
                         // 更新
                         StartCoroutine(Yoshinani.Instance.Call(Yoshinani.RequestType.PUT, string.Format("Scores/{0}", scores.results[0].objectId), scoreData, (isError2, json2) => {
-                            Debug.Log(json2);
+                            if (!isError2) {
+                                PlayerPrefs.SetFloat(PREFS_KEY_HIGH_SCORE, newScore);
+                            }
                             callback(isError2);
                         }));
                     } else {

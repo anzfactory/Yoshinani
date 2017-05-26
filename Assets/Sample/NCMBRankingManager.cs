@@ -65,7 +65,7 @@ namespace Sample
 
         public void OnClickSendScore(Text text)
         {
-            this.ncmbRanking.SendScore(float.Parse(text.text), true, (isError) => {
+            this.ncmbRanking.SendScore(float.Parse(text.text), false, (isError) => {
                 if (!isError) {
                     Debug.Log("スコア送信したよ！");
                 } else {
