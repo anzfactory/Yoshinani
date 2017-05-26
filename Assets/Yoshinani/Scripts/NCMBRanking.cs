@@ -237,7 +237,7 @@ namespace Xyz.Anzfactory.NCMBUtil
 
                 this.applicationKey = applicationKey;
                 this.clientKey = clientKey;
-                this.timestamp = "2017-05-24T15:30:25.051Z"; // DateTime.UtcNow.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'");
+                this.timestamp = DateTime.UtcNow.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'");
                 this.baseParamString = this.ParamString();
             }
                 
