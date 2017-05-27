@@ -8,6 +8,7 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityRandom = UnityEngine.Random;
+using Xyz.Anzfactory.NCMBUtil.Models;
 
 namespace Xyz.Anzfactory.NCMBUtil
 {
@@ -44,13 +45,6 @@ namespace Xyz.Anzfactory.NCMBUtil
         private void Awake()
         {
             Yoshinani.Instance.Setup(this.ApplicationKey, this.ClientKey);
-        }
-        #endregion
-
-        #region "Events"
-        public void OnClickUpdateNickname()
-        {
-            
         }
         #endregion
 
@@ -172,6 +166,9 @@ namespace Xyz.Anzfactory.NCMBUtil
             queryData.SortColumn = "-score";    // マイナスをつけると降順 つけないと昇順
             Yoshinani.Instance.Call(Yoshinani.RequestType.GET, ApiPath.Scores.Val(), queryData, (isError, json) => {
                 var scores = JsonUtility.FromJson<Scores>(json);
+                foreach (var score in scores.results) {
+                    score.isSelf = (this.registeredUser != null && score.userObjectId == this.registeredUser.objectId);
+                }
                 callback(scores.results);
             });
         }
@@ -232,32 +229,6 @@ namespace Xyz.Anzfactory.NCMBUtil
 
                 return sb.ToString();
             }
-        }
-        [Serializable]
-        public class User
-        {
-            public string objectId;
-            public string userName;
-            public string password;
-            public string nickname;
-            public string sessionToken;
-        }
-
-        [Serializable]
-        public class Scores
-        {
-            public List<Score> results;
-        }
-
-        [Serializable]
-        public class Score
-        {
-            public string objectId;
-            public float score;
-            public string userObjectId;
-            public string nickname;
-            [NonSerialized]
-            public bool isSelf;
         }
         #endregion
     }

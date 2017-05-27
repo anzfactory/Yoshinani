@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using Xyz.Anzfactory.NCMBUtil;
+using Xyz.Anzfactory.NCMBUtil.Models;
 
 namespace Sample
 {
@@ -29,7 +30,7 @@ namespace Sample
         private void Start()
         {
             // ユーザ登録
-            this.ncmbRanking.RegisterUser((bool isError, NCMBRanking.User registerdUser) => {
+            this.ncmbRanking.RegisterUser((bool isError, User registerdUser) => {
                 if (!isError) {
                     Debug.Log(string.Format("ようこそ {0}", registerdUser.nickname));
                 } else {
