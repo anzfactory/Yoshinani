@@ -124,7 +124,7 @@ namespace Xyz.Anzfactory.NCMBUtil
 
             var queryData = new Yoshinani.RequestData();
             queryData.AddParam("userObjectId", this.registeredUser.objectId);
-            Yoshinani.Instance.Call(Yoshinani.RequestType.GET, "Scores", queryData, (isError, json) => {
+            Yoshinani.Instance.Call(Yoshinani.RequestType.GET, "classes/Scores", queryData, (isError, json) => {
                 if (!isError) {
                     var scores = JsonUtility.FromJson<Scores>(json);
                     var scoreData = new Yoshinani.RequestData();
@@ -137,7 +137,7 @@ namespace Xyz.Anzfactory.NCMBUtil
                         var aclFormat = @"{""*"":{""read"":true},""{0}"":{""read"":true,""write"":true}}";
                         var acl = MiniJSON.Json.Deserialize(aclFormat.Replace("{0}", this.registeredUser.objectId));
                         scoreData.AddParam("acl", acl);
-                        Yoshinani.Instance.Call(Yoshinani.RequestType.POST, "Scores", scoreData, (isError2, json2) => {
+                        Yoshinani.Instance.Call(Yoshinani.RequestType.POST, "classes/Scores", scoreData, (isError2, json2) => {
                             if (!isError2) {
                                 PlayerPrefs.SetFloat(PREFS_KEY_HIGH_SCORE, newScore);
                             }
@@ -145,7 +145,7 @@ namespace Xyz.Anzfactory.NCMBUtil
                         });
                     } else if (isForce || newScore > scores.results[0].score) {
                         // 更新
-                        Yoshinani.Instance.Call(Yoshinani.RequestType.PUT, string.Format("Scores/{0}", scores.results[0].objectId), scoreData, (isError2, json2) => {
+                        Yoshinani.Instance.Call(Yoshinani.RequestType.PUT, string.Format("classes/Scores/{0}", scores.results[0].objectId), scoreData, (isError2, json2) => {
                             if (!isError2) {
                                 PlayerPrefs.SetFloat(PREFS_KEY_HIGH_SCORE, newScore);
                             }
@@ -166,7 +166,7 @@ namespace Xyz.Anzfactory.NCMBUtil
             var queryData = new Yoshinani.RequestData();
             queryData.Limit = 50;
             queryData.SortColumn = "-score";    // マイナスをつけると降順 つけないと昇順
-            Yoshinani.Instance.Call(Yoshinani.RequestType.GET, "Scores", queryData, (isError, json) => {
+            Yoshinani.Instance.Call(Yoshinani.RequestType.GET, "classes/Scores", queryData, (isError, json) => {
                 var scores = JsonUtility.FromJson<Scores>(json);
                 callback(scores.results);
             });
@@ -178,7 +178,7 @@ namespace Xyz.Anzfactory.NCMBUtil
 
             var queryData = new Yoshinani.RequestData();
             queryData.AddParam("userObjectId", this.registeredUser.objectId);
-            Yoshinani.Instance.Call(Yoshinani.RequestType.GET, "Scores", queryData, (isError, json) => {
+            Yoshinani.Instance.Call(Yoshinani.RequestType.GET, "classes/Scores", queryData, (isError, json) => {
                 if (!isError) {
                     var scores = JsonUtility.FromJson<Scores>(json);
                     if (scores.results.Count == 1) {
@@ -187,7 +187,7 @@ namespace Xyz.Anzfactory.NCMBUtil
                         w.Add("$gt", scores.results[0].score);
                         queryData.AddParam("score", w);
                         queryData.Count = true;
-                        Yoshinani.Instance.Call(Yoshinani.RequestType.GET, "Scores", queryData, (isError2, json2) => {
+                        Yoshinani.Instance.Call(Yoshinani.RequestType.GET, "classes/Scores", queryData, (isError2, json2) => {
                             if (!isError2) {
                                 Dictionary<string, object> result = MiniJSON.Json.Deserialize(json2) as Dictionary<string, object>;
                                 callback(false, int.Parse(result["count"].ToString()) + 1);
@@ -261,10 +261,10 @@ namespace Xyz.Anzfactory.NCMBUtil
                 this.baseParamString = this.ParamString();
             }
                 
-            public void Call(RequestType method, string pathPart, RequestData queryData, Action<bool, string> callback)
+            public void Call(RequestType method, string path, RequestData queryData, Action<bool, string> callback)
             {
-                bool isAuthPath = (pathPart.IndexOf("users") == 0 || pathPart == "login");
-                string endpoint = this.Endpoint(pathPart, isAuthPath);
+                bool isAuthPath = (path.IndexOf("users") == 0 || path == "login");
+                string endpoint = this.Endpoint(path);
                 string queryString = this.QueryString(queryData, !isAuthPath);
                 UnityWebRequest request;
                 switch (method) {
@@ -300,13 +300,9 @@ namespace Xyz.Anzfactory.NCMBUtil
                 });
             }
 
-            private string Endpoint(string pathPart, bool includeClassesString)
+            private string Endpoint(string path)
             {
-                if (includeClassesString) {
-                    return string.Format("{0}://{1}/{2}/{3}", API_PROTOCOL, API_DOMAIN, API_VERSION, pathPart);
-                } else {
-                    return string.Format("{0}://{1}/{2}/classes/{3}", API_PROTOCOL, API_DOMAIN, API_VERSION, pathPart);
-                }
+                return string.Format("{0}://{1}/{2}/{3}", API_PROTOCOL, API_DOMAIN, API_VERSION, path);
             }
 
             private string Signature(string method, string endpoint, string queryString)
