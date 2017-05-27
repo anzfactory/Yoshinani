@@ -22,6 +22,13 @@ namespace Xyz.Anzfactory.NCMBUtil
         private static readonly string PREFS_KEY_USER_PASSWORD = "ncmb.userPassword";
         private static readonly string PREFS_KEY_HIGH_SCORE = "ncmb.userHighScore";
 
+        public enum ApiPath
+        {
+            Users,
+            Login,
+            Scores
+        }
+
 
         #region "Serialize Fields"
         [SerializeField] private string ApplicationKey;
@@ -64,7 +71,7 @@ namespace Xyz.Anzfactory.NCMBUtil
                 postData.AddParam("password", password);
                 postData.AddParam("userName", userName);
                 postData.AddParam("nickname", DEFAULT_USER_NICKNAME);
-                Yoshinani.Instance.Call(Yoshinani.RequestType.POST, "users", postData, (isError, json) => {
+                Yoshinani.Instance.Call(Yoshinani.RequestType.POST, ApiPath.Users.Val(), postData, (isError, json) => {
                     if (!isError) {
                         this.registeredUser = JsonUtility.FromJson<User>(json);
                         if (!string.IsNullOrEmpty(this.registeredUser.objectId)) {
@@ -86,7 +93,7 @@ namespace Xyz.Anzfactory.NCMBUtil
                 var queryData = new Yoshinani.RequestData();
                 queryData.AddParam("userName", userName);
                 queryData.AddParam("password", password);
-                Yoshinani.Instance.Call(Yoshinani.RequestType.GET, "login", queryData, (isError, json) => {
+                Yoshinani.Instance.Call(Yoshinani.RequestType.GET, ApiPath.Login.Val(), queryData, (isError, json) => {
                     if (!isError) {
                         this.registeredUser = JsonUtility.FromJson<User>(json);
                         Yoshinani.Instance.SessionToken = this.registeredUser.sessionToken;
@@ -104,7 +111,7 @@ namespace Xyz.Anzfactory.NCMBUtil
 
             var putData = new Yoshinani.RequestData();
             putData.AddParam("nickname", nickname);
-            Yoshinani.Instance.Call(Yoshinani.RequestType.PUT, string.Format("users/{0}", this.registeredUser.objectId), putData, (isError, json) => {
+            Yoshinani.Instance.Call(Yoshinani.RequestType.PUT, string.Format("{0}/{1}", ApiPath.Users.Val(), this.registeredUser.objectId), putData, (isError, json) => {
                 this.registeredUser.nickname = nickname;
                 callback(isError);
             });
@@ -124,7 +131,7 @@ namespace Xyz.Anzfactory.NCMBUtil
 
             var queryData = new Yoshinani.RequestData();
             queryData.AddParam("userObjectId", this.registeredUser.objectId);
-            Yoshinani.Instance.Call(Yoshinani.RequestType.GET, "classes/Scores", queryData, (isError, json) => {
+            Yoshinani.Instance.Call(Yoshinani.RequestType.GET, ApiPath.Scores.Val(), queryData, (isError, json) => {
                 if (!isError) {
                     var scores = JsonUtility.FromJson<Scores>(json);
                     var scoreData = new Yoshinani.RequestData();
@@ -137,7 +144,7 @@ namespace Xyz.Anzfactory.NCMBUtil
                         var aclFormat = @"{""*"":{""read"":true},""{0}"":{""read"":true,""write"":true}}";
                         var acl = MiniJSON.Json.Deserialize(aclFormat.Replace("{0}", this.registeredUser.objectId));
                         scoreData.AddParam("acl", acl);
-                        Yoshinani.Instance.Call(Yoshinani.RequestType.POST, "classes/Scores", scoreData, (isError2, json2) => {
+                        Yoshinani.Instance.Call(Yoshinani.RequestType.POST, ApiPath.Scores.Val(), scoreData, (isError2, json2) => {
                             if (!isError2) {
                                 PlayerPrefs.SetFloat(PREFS_KEY_HIGH_SCORE, newScore);
                             }
@@ -145,7 +152,7 @@ namespace Xyz.Anzfactory.NCMBUtil
                         });
                     } else if (isForce || newScore > scores.results[0].score) {
                         // 更新
-                        Yoshinani.Instance.Call(Yoshinani.RequestType.PUT, string.Format("classes/Scores/{0}", scores.results[0].objectId), scoreData, (isError2, json2) => {
+                        Yoshinani.Instance.Call(Yoshinani.RequestType.PUT, string.Format("{0}/{1}", ApiPath.Scores.Val(), scores.results[0].objectId), scoreData, (isError2, json2) => {
                             if (!isError2) {
                                 PlayerPrefs.SetFloat(PREFS_KEY_HIGH_SCORE, newScore);
                             }
@@ -166,7 +173,7 @@ namespace Xyz.Anzfactory.NCMBUtil
             var queryData = new Yoshinani.RequestData();
             queryData.Limit = 50;
             queryData.SortColumn = "-score";    // マイナスをつけると降順 つけないと昇順
-            Yoshinani.Instance.Call(Yoshinani.RequestType.GET, "classes/Scores", queryData, (isError, json) => {
+            Yoshinani.Instance.Call(Yoshinani.RequestType.GET, ApiPath.Scores.Val(), queryData, (isError, json) => {
                 var scores = JsonUtility.FromJson<Scores>(json);
                 callback(scores.results);
             });
@@ -178,7 +185,7 @@ namespace Xyz.Anzfactory.NCMBUtil
 
             var queryData = new Yoshinani.RequestData();
             queryData.AddParam("userObjectId", this.registeredUser.objectId);
-            Yoshinani.Instance.Call(Yoshinani.RequestType.GET, "classes/Scores", queryData, (isError, json) => {
+            Yoshinani.Instance.Call(Yoshinani.RequestType.GET, ApiPath.Scores.Val(), queryData, (isError, json) => {
                 if (!isError) {
                     var scores = JsonUtility.FromJson<Scores>(json);
                     if (scores.results.Count == 1) {
@@ -187,7 +194,7 @@ namespace Xyz.Anzfactory.NCMBUtil
                         w.Add("$gt", scores.results[0].score);
                         queryData.AddParam("score", w);
                         queryData.Count = true;
-                        Yoshinani.Instance.Call(Yoshinani.RequestType.GET, "classes/Scores", queryData, (isError2, json2) => {
+                        Yoshinani.Instance.Call(Yoshinani.RequestType.GET, ApiPath.Scores.Val(), queryData, (isError2, json2) => {
                             if (!isError2) {
                                 Dictionary<string, object> result = MiniJSON.Json.Deserialize(json2) as Dictionary<string, object>;
                                 callback(false, int.Parse(result["count"].ToString()) + 1);
@@ -440,7 +447,6 @@ namespace Xyz.Anzfactory.NCMBUtil
                 return sb.ToString();
             }
         }
-
         [Serializable]
         public class User
         {
@@ -466,6 +472,23 @@ namespace Xyz.Anzfactory.NCMBUtil
             public string nickname;
             [NonSerialized]
             public bool isSelf;
+        }
+    }
+
+    public static class ApiPathExtension
+    {
+        public static string Val(this NCMBRanking.ApiPath self) 
+        {
+            switch (self) {
+                case NCMBRanking.ApiPath.Users:
+                    return "users";
+                case NCMBRanking.ApiPath.Login:
+                    return "login";
+                case NCMBRanking.ApiPath.Scores:
+                    return "classes/Scores";
+                default:
+                    return "";
+            }
         }
     }
 
