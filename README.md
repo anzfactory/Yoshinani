@@ -9,6 +9,12 @@ Unity（C#）で NCMB REST API を叩くやつです。（WebGL向けに）
 * トップランカー取得  
 * ユーザ自身の順位取得  
 
+### Prefab
+
+梱包されている**RankingBoard**というプレファブを使えば、  
+ノンコーディングでランキング表示できます  
+（※**uGUI**で構築されています）
+
 ## セットアップ
 
 1. まずはNCMBアカウントつくってください！（すでにあるならSkip！）  
@@ -55,6 +61,18 @@ Unity（C#）で NCMB REST API を叩くやつです。（WebGL向けに）
             Debug.Log(string.Format("{0}: {1}", score.nickname, score.score.ToString()));
         }
     });
+
+### RankingBoard
+
+RankingBoardというプレファブの使い方
+
+1. Canvasを設置（すでにあるならスキップ）  
+2. `Yoshinani>Refabs>RankingBoard`をCanvas内にドラッグ＆ドロップ  
+3. 大きさ等を適宜調整  
+4. Inspector上でNCMBRankingコンポーネントのApplicationKey/ClientKeyを設定
+5. 後はよしななタイミングで`RankingBoard.Show()`を呼び出すだけ！
+
+デザインなんかは各々調整してくださいまし...
 
 ## CREDIT
 
