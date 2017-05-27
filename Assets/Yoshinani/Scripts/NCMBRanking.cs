@@ -406,6 +406,11 @@ namespace Xyz.Anzfactory.NCMBUtil
 
             private class Requestor: MonoBehaviour
             {
+                void Awake()
+                {
+                    DontDestroyOnLoad(this.gameObject);
+                }
+
                 public void Done(UnityWebRequest request, Action<UnityWebRequest> callback)
                 {
                     StartCoroutine(_done(request, callback));
