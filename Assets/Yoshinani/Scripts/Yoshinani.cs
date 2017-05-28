@@ -120,6 +120,29 @@ namespace Xyz.Anzfactory.NCMBUtil
                 }
             });
         }
+
+        public void Upload(string fileName, byte[] bytes, Action<bool, string> callback)
+        {
+            string endpoint = this.Endpoint(string.Format("files/{0}", fileName));
+            UnityWebRequest request;
+
+            var formData = new WWWForm();
+            formData.AddBinaryData("file", bytes, fileName, "image/png");
+            request = UnityWebRequest.Post(endpoint, formData);
+            request.SetRequestHeader(KEY_APPLICATION, this.applicationKey);
+            request.SetRequestHeader(KEY_SIGNATURE, this.Signature(RequestType.POST.ToString(), endpoint, ""));
+            request.SetRequestHeader(KEY_TIMESTAMP, this.timestamp);
+            request.downloadHandler = new DownloadHandlerBuffer();
+
+            this.requestor.Done(request, (requested) => {
+                if (requested.isError) {
+                    Debug.LogError(requested.error);
+                    callback(true, null);
+                } else {
+                    callback(false, requested.downloadHandler.text);
+                }
+            });
+        }
         #endregion
 
         #region "Private Methods"
