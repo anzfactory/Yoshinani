@@ -24,7 +24,9 @@ namespace Xyz.Anzfactory.NCMBUtil
         #region "Events"
         private void Awake()
         {
-            Yoshinani.Instance.Setup(this.applicationKey, this.clientKey);
+            if (!string.IsNullOrEmpty(this.applicationKey) && !string.IsNullOrEmpty(this.clientKey)) {
+                Yoshinani.Instance.Setup(this.applicationKey, this.clientKey);
+            }
         }
         #endregion
 
@@ -48,10 +50,12 @@ namespace Xyz.Anzfactory.NCMBUtil
             }));
         }
 
-        public void TakeAndSave()
+        public void TakeAndOpenImageWindow()
         {
             StartCoroutine(this.TakeScreenshot((texture) => {
-                
+                var textureBase64 = Convert.ToBase64String(texture.EncodeToPNG());
+                var image = string.Format("data:image/png;base64,{0}", textureBase64);
+                Application.ExternalEval(string.Format("window.open('{0}', '_blank')", image));
             }));
         }
         #endregion
