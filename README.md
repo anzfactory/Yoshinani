@@ -3,8 +3,7 @@ Unity（C#）で NCMB REST API を叩くやつです。（WebGL向けに）
 
 ## できること
 
-* ユーザ自動認証  
-* ユーザのニックネーム変更  
+* スコアユーザのニックネーム変更（一度もスコア送信していない場合はエラーになる）  
 * スコア送信  
 * トップランカー取得  
 * ユーザ自身の順位取得  
@@ -13,7 +12,8 @@ Unity（C#）で NCMB REST API を叩くやつです。（WebGL向けに）
 
 梱包されている**RankingBoard**というプレファブを使えば、  
 ノンコーディングでランキング表示できます  
-（※**uGUI**で構築されています）
+（※**uGUI**で構築されています）  
+スコアの送信自体は適宜行って下さい..
 
 ## セットアップ
 
@@ -34,15 +34,6 @@ Unity（C#）で NCMB REST API を叩くやつです。（WebGL向けに）
     // こういう感じにアタッチさせておいて
     [SerializeField] private NCMBRanking ncmbRanking;
 
-    // ユーザ登録（これは何度呼んでも大丈夫。最初の場合は登録で以降はログインという処理になっている）
-    this.ncmbRanking.RegisterUser((bool isError, NCMBRanking.User registerdUser) => {
-        if (!isError) {
-            Debug.Log(string.Format("ようこそ {0}", registerdUser.nickname));
-        } else {
-            Debug.LogError("何らかの理由でユーザ認証失敗！");
-        }
-    });
-
     // スコア送信
     // 第2引数のやつは更新を強制するかどうか
     // false: ハイスコア更新時のみにスコアを送信する
@@ -53,6 +44,13 @@ Unity（C#）で NCMB REST API を叩くやつです。（WebGL向けに）
         } else {
             Debug.LogError("何らかの理由でスコア送信失敗！");
         }
+    });
+    // スコア送信その２（スコアとニックネームを同時に送るタイプ）
+    // 第3引数のやつは更新を強制するかどうか
+    // false: ハイスコア更新時のみにスコアを送信する
+    // true : ハイスコア更新していなくてもスコアを送信する
+    this.ncmbRanking.SendScore(120f, "nickname", false, (isError) => {
+        // ...something...
     });
 
     // トップ50取得
@@ -74,8 +72,25 @@ RankingBoardというプレファブの使い方
 
 デザインなんかは各々調整してくださいまし...
 
+## 補足（物足りない方向け）
+
+こちらで提供している機能以外の場合は`Xyz.Anzfactory.NCMBUtil.Yoshinani`を直接利用することで、  
+NCMB Rest Apiを利用することができます  
+Stagesっていうクラスを作ってデータを登録してあって、それを全取得したい場合は
+
+    Yoshinani.Instance.Call(Yoshinani.RequestType.Get, "classes/Stages", null, (isError, json) => {
+        // jsonが結果なのであとは好きにデシリアライズしてください
+    });
+
+こういう感じになります。  
+条件などの指定は[NCMB RESTドキュメント](http://mb.cloud.nifty.com/doc/current/rest/common/query.html)当たりを参照してください。  
+（`NCMBRanking`の`SelfRank()`あたりも参考になるかも）
+    
+    
+
 ## CREDIT
 
+[Nifty Cloud Mobile Backend](http://mb.cloud.nifty.com/)  
 [darktable/MiniJSON.cs](https://gist.github.com/darktable/1411710)
 
 ## LICENSE
