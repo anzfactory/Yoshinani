@@ -57,14 +57,26 @@ namespace Xyz.Anzfactory.NCMBUtil
         #region "Public Methods"
         public void UpdateNickname(string nickname, Action<bool> callback)
         {
+            if (this.highScoreData == null) {
+                Debug.LogError("まだ一度もスコア送信していないみたい。まずはスコアを送信してくださいね！");
+                return;
+            }
+
             var putData = new Yoshinani.RequestData();
             putData.AddParam("nickname", nickname);
             Yoshinani.Instance.Call(Yoshinani.RequestType.PUT, string.Format("{0}/{1}", ApiPath.Scores.Val(), this.highScoreData.objectId), putData, (isError, json) => {
                 this.highScoreData.nickname = nickname;
+                PlayerPrefs.SetString(PREFS_KEY_HIGH_SCORE_DATA, JsonUtility.ToJson(this.highScoreData));
+                PlayerPrefs.Save();
                 callback(isError);
             });
         }
 
+        public void SendScore(float newScore, bool isForce, Action<bool> callback)
+        {
+            var nickname = this.highScoreData == null ? "No Name" : this.highScoreData.nickname;
+            this.SendScore(newScore, nickname, isForce, callback);
+        }
         public void SendScore(float newScore, string nickname, bool isForce, Action<bool> callback)
         {
             if (!isForce && this.highScoreData != null && this.highScoreData.score >= newScore) {
@@ -84,13 +96,19 @@ namespace Xyz.Anzfactory.NCMBUtil
                 this.highScoreData.score = s;
                 this.highScoreData.nickname = n;
                 PlayerPrefs.SetString(PREFS_KEY_HIGH_SCORE_DATA, JsonUtility.ToJson(this.highScoreData));
+                PlayerPrefs.Save();
             };
 
             if (this.highScoreData == null) {
                 // 新規
                 Yoshinani.Instance.Call(Yoshinani.RequestType.POST, ApiPath.Scores.Val(), scoreData, (isError, json) => {
-                    if (!isError) {
+                    var result = MiniJSON.Json.Deserialize(json) as Dictionary<string, object>;
+                    if (!isError && result.ContainsKey("objectId")) {
+                        this.highScoreData = new Score();
+                        this.highScoreData.objectId = result["objectId"].ToString();
                         fin(newScore, nickname);
+                    } else {
+                        isError = true;
                     }
                     callback(isError);
                 });
