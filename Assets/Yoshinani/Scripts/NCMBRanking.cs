@@ -141,6 +141,7 @@ namespace Xyz.Anzfactory.NCMBUtil
         {
             if (this.highScoreData == null) {
                 callback(true, 0);
+                return;
             }
             var requestData = new Yoshinani.RequestData();
             var w = new Dictionary<string, object>();
