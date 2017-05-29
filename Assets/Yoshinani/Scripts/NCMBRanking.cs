@@ -15,15 +15,10 @@ namespace Xyz.Anzfactory.NCMBUtil
 
     public class NCMBRanking : MonoBehaviour
     {
-        private static readonly string DEFAULT_USER_NICKNAME = "No Name";
-        private static readonly string PREFS_KEY_USER_NAME = "ncmb.userName";
-        private static readonly string PREFS_KEY_USER_PASSWORD = "ncmb.userPassword";
-        private static readonly string PREFS_KEY_HIGH_SCORE = "ncmb.userHighScore";
+        private static readonly string PREFS_KEY_HIGH_SCORE_DATA = "ncmb.userHighScoreData";
 
         public enum ApiPath
         {
-            Users,
-            Login,
             Scores
         }
 
@@ -34,11 +29,14 @@ namespace Xyz.Anzfactory.NCMBUtil
         #endregion
 
         #region "Fields"
-        private User registeredUser;
-        public User RegisteredUser { get { return this.registeredUser; } }
+        private Score highScoreData;
         #endregion
 
         #region "Properties"
+        public Score HighScoreData
+        {
+            get { return this.highScoreData; }
+        }
         #endregion
 
         #region "Lifecycle"
@@ -46,117 +44,65 @@ namespace Xyz.Anzfactory.NCMBUtil
         {
             Yoshinani.Instance.Setup(this.ApplicationKey, this.ClientKey);
         }
+
+        public void Start()
+        {
+            var json = PlayerPrefs.GetString(PREFS_KEY_HIGH_SCORE_DATA, "");
+            if (!string.IsNullOrEmpty(json)) {
+                this.highScoreData = JsonUtility.FromJson<Score>(json);
+            }
+        }
         #endregion
 
         #region "Public Methods"
-        public void RegisterUser(Action<bool, User> callback)
-        {
-            string userName = PlayerPrefs.GetString(PREFS_KEY_USER_NAME, "");
-            string password = PlayerPrefs.GetString(PREFS_KEY_USER_PASSWORD, "");
-
-            if (string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(password)) {
-                // 新規
-                userName = Guid.NewGuid().ToString("N");
-                password = PasswordGenerator.GeneratePassword(16);
-                var postData = new Yoshinani.RequestData();
-                postData.AddParam("password", password);
-                postData.AddParam("userName", userName);
-                postData.AddParam("nickname", DEFAULT_USER_NICKNAME);
-                Yoshinani.Instance.Call(Yoshinani.RequestType.POST, ApiPath.Users.Val(), postData, (isError, json) => {
-                    if (!isError) {
-                        this.registeredUser = JsonUtility.FromJson<User>(json);
-                        if (!string.IsNullOrEmpty(this.registeredUser.objectId)) {
-                            // 返ってくるjsonに追加したnicknameがないのでしぶしぶ手動せっとします...
-                            // apiコールに気を使いたいんだからケチケチせずにフルフルで返してほしいわー
-                            this.registeredUser.nickname = DEFAULT_USER_NICKNAME;
-                            Yoshinani.Instance.SessionToken = this.registeredUser.sessionToken;
-                            PlayerPrefs.SetString(PREFS_KEY_USER_NAME, userName);
-                            PlayerPrefs.SetString(PREFS_KEY_USER_PASSWORD, password);
-                        } else {
-                            isError = true;
-                        }
-                    }
-
-                    callback(isError, this.registeredUser);
-                });
-            } else {
-                // 取得
-                var queryData = new Yoshinani.RequestData();
-                queryData.AddParam("userName", userName);
-                queryData.AddParam("password", password);
-                Yoshinani.Instance.Call(Yoshinani.RequestType.GET, ApiPath.Login.Val(), queryData, (isError, json) => {
-                    if (!isError) {
-                        this.registeredUser = JsonUtility.FromJson<User>(json);
-                        Yoshinani.Instance.SessionToken = this.registeredUser.sessionToken;
-                    }
-
-                    callback(isError, this.registeredUser);
-                });
-            }
-
-        }
-
         public void UpdateNickname(string nickname, Action<bool> callback)
         {
-            Assert.IsTrue(this.registeredUser != null && !string.IsNullOrEmpty(this.registeredUser.objectId), "ユーザ認証が終わっていないみたい...");
-
             var putData = new Yoshinani.RequestData();
             putData.AddParam("nickname", nickname);
-            Yoshinani.Instance.Call(Yoshinani.RequestType.PUT, string.Format("{0}/{1}", ApiPath.Users.Val(), this.registeredUser.objectId), putData, (isError, json) => {
-                this.registeredUser.nickname = nickname;
+            Yoshinani.Instance.Call(Yoshinani.RequestType.PUT, string.Format("{0}/{1}", ApiPath.Scores.Val(), this.highScoreData.objectId), putData, (isError, json) => {
+                this.highScoreData.nickname = nickname;
                 callback(isError);
             });
         }
 
-        public void SendScore(float newScore, bool isForce, Action<bool> callback)
+        public void SendScore(float newScore, string nickname, bool isForce, Action<bool> callback)
         {
-            Assert.IsTrue(this.registeredUser != null && !string.IsNullOrEmpty(this.registeredUser.objectId), "ユーザ認証が終わっていないみたい...");
-
-            float currentHighScore = PlayerPrefs.GetFloat(PREFS_KEY_HIGH_SCORE, 0f);
-            if (!isForce && currentHighScore >= newScore) {
+            if (!isForce && this.highScoreData != null && this.highScoreData.score >= newScore) {
                 Debug.Log("送信する必要ないよ！");
                 // 更新必要なし
                 callback(false);
                 return;
             }
 
-            var queryData = new Yoshinani.RequestData();
-            queryData.AddParam("userObjectId", this.registeredUser.objectId);
-            Yoshinani.Instance.Call(Yoshinani.RequestType.GET, ApiPath.Scores.Val(), queryData, (isError, json) => {
-                if (!isError) {
-                    var scores = JsonUtility.FromJson<Scores>(json);
-                    var scoreData = new Yoshinani.RequestData();
-                    scoreData.AddParam("score", newScore);
-                    scoreData.AddParam("nickname", this.registeredUser.nickname);
-                    if (scores.results != null && scores.results.Count == 0) {
-                        // 新規
-                        scoreData.AddParam("userObjectId", this.registeredUser.objectId);
-                        // ACL
-                        var aclFormat = @"{""*"":{""read"":true},""{0}"":{""read"":true,""write"":true}}";
-                        var acl = MiniJSON.Json.Deserialize(aclFormat.Replace("{0}", this.registeredUser.objectId));
-                        scoreData.AddParam("acl", acl);
-                        Yoshinani.Instance.Call(Yoshinani.RequestType.POST, ApiPath.Scores.Val(), scoreData, (isError2, json2) => {
-                            if (!isError2) {
-                                PlayerPrefs.SetFloat(PREFS_KEY_HIGH_SCORE, newScore);
-                            }
-                            callback(isError2);
-                        });
-                    } else if (isForce || newScore > scores.results[0].score) {
-                        // 更新
-                        Yoshinani.Instance.Call(Yoshinani.RequestType.PUT, string.Format("{0}/{1}", ApiPath.Scores.Val(), scores.results[0].objectId), scoreData, (isError2, json2) => {
-                            if (!isError2) {
-                                PlayerPrefs.SetFloat(PREFS_KEY_HIGH_SCORE, newScore);
-                            }
-                            callback(isError2);
-                        });
-                    } else {
-                        // 更新必要なし
-                        callback(true);
+            if (string.IsNullOrEmpty(nickname.Trim())) {
+                nickname = "No Name";
+            }
+            var scoreData = new Yoshinani.RequestData();
+            scoreData.AddParam("nickname", nickname);
+            scoreData.AddParam("score", newScore);
+            System.Action<float, string> fin = (float s, string n) => {
+                this.highScoreData.score = s;
+                this.highScoreData.nickname = n;
+                PlayerPrefs.SetString(PREFS_KEY_HIGH_SCORE_DATA, JsonUtility.ToJson(this.highScoreData));
+            };
+
+            if (this.highScoreData == null) {
+                // 新規
+                Yoshinani.Instance.Call(Yoshinani.RequestType.POST, ApiPath.Scores.Val(), scoreData, (isError, json) => {
+                    if (!isError) {
+                        fin(newScore, nickname);
                     }
-                } else {
-                    callback(false);
-                }
-            });
+                    callback(isError);
+                });
+            } else {
+                // 更新
+                Yoshinani.Instance.Call(Yoshinani.RequestType.PUT, string.Format("{0}/{1}", ApiPath.Scores.Val(), this.highScoreData.objectId), scoreData, (isError, json) => {
+                    if (!isError) {
+                        fin(newScore, nickname);
+                    }
+                    callback(isError);
+                });
+            }
         }
 
         public void Top50(Action<List<Score>> callback)
@@ -167,7 +113,7 @@ namespace Xyz.Anzfactory.NCMBUtil
             Yoshinani.Instance.Call(Yoshinani.RequestType.GET, ApiPath.Scores.Val(), queryData, (isError, json) => {
                 var scores = JsonUtility.FromJson<Scores>(json);
                 foreach (var score in scores.results) {
-                    score.isSelf = (this.registeredUser != null && score.userObjectId == this.registeredUser.objectId);
+                    score.isSelf = (this.highScoreData != null && score.objectId == this.highScoreData.objectId);
                 }
                 callback(scores.results);
             });
@@ -175,32 +121,20 @@ namespace Xyz.Anzfactory.NCMBUtil
 
         public void SelfRank(Action<bool, int> callback)
         {
-            Assert.IsTrue(this.registeredUser != null && !string.IsNullOrEmpty(this.registeredUser.objectId), "ユーザ認証が終わっていないみたい...");
-
-            var queryData = new Yoshinani.RequestData();
-            queryData.AddParam("userObjectId", this.registeredUser.objectId);
-            Yoshinani.Instance.Call(Yoshinani.RequestType.GET, ApiPath.Scores.Val(), queryData, (isError, json) => {
+            if (this.highScoreData == null) {
+                callback(true, 0);
+            }
+            var requestData = new Yoshinani.RequestData();
+            var w = new Dictionary<string, object>();
+            w.Add("$gt", this.highScoreData.score);
+            requestData.AddParam("score", w);
+            requestData.Count = true;    // Count()するという指示
+            Yoshinani.Instance.Call(Yoshinani.RequestType.GET, ApiPath.Scores.Val(), requestData, (isError, json) => {
                 if (!isError) {
-                    var scores = JsonUtility.FromJson<Scores>(json);
-                    if (scores.results.Count == 1) {
-                        queryData.Reset();
-                        var w = new Dictionary<string, object>();
-                        w.Add("$gt", scores.results[0].score);
-                        queryData.AddParam("score", w);
-                        queryData.Count = true;
-                        Yoshinani.Instance.Call(Yoshinani.RequestType.GET, ApiPath.Scores.Val(), queryData, (isError2, json2) => {
-                            if (!isError2) {
-                                Dictionary<string, object> result = MiniJSON.Json.Deserialize(json2) as Dictionary<string, object>;
-                                callback(false, int.Parse(result["count"].ToString()) + 1);
-                            } else {
-                                callback(false, 0);
-                            }
-                        });
-                    } else {
-                        callback(false, 0);
-                    }
+                    Dictionary<string, object> result = MiniJSON.Json.Deserialize(json) as Dictionary<string, object>;
+                    callback(false, int.Parse(result["count"].ToString()) + 1);
                 } else {
-                    callback(false, 0);
+                    callback(true, 0);
                 }
             });
         }
@@ -241,10 +175,6 @@ namespace Xyz.Anzfactory.NCMBUtil
         public static string Val(this NCMBRanking.ApiPath self) 
         {
             switch (self) {
-                case NCMBRanking.ApiPath.Users:
-                    return "users";
-                case NCMBRanking.ApiPath.Login:
-                    return "login";
                 case NCMBRanking.ApiPath.Scores:
                     return "classes/Scores";
                 default:
