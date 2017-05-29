@@ -41,8 +41,6 @@ namespace Xyz.Anzfactory.NCMBUtil
         {
             this.itemTemplate.gameObject.SetActive(false);
             this.gameObject.SetActive(false);
-            this.ranking.RegisterUser((isError, user) => {
-            });
         }
 
         private void Update()
