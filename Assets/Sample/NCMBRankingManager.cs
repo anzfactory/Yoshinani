@@ -29,16 +29,6 @@ namespace Sample
 
         private void Start()
         {
-            // ユーザ登録
-            this.ncmbRanking.RegisterUser((bool isError, User registerdUser) => {
-                if (!isError) {
-                    Debug.Log(string.Format("ようこそ {0}", registerdUser.nickname));
-                } else {
-                    Debug.LogError("何らかの理由でユーザ認証失敗！");
-                }
-            });
-            // 認証後は下記のように登録ユーザにアクセスできるよ！
-//            this.ncmbRanking.RegisteredUser
         }
 
         #endregion
@@ -48,7 +38,7 @@ namespace Sample
         {
             this.ncmbRanking.UpdateNickname(text.text, (isError) => {
                 if (!isError) {
-                    Debug.Log(string.Format("変えたよ！ {0}", this.ncmbRanking.RegisteredUser.nickname));
+                    Debug.Log(string.Format("変えたよ！ {0}", this.ncmbRanking.HighScoreData.nickname));
                 } else {
                     Debug.LogError("何らかの理由でニックネーム変更失敗！");
                 }
