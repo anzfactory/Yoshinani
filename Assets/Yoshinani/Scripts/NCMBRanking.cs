@@ -83,7 +83,6 @@ namespace Xyz.Anzfactory.NCMBUtil
                 if (this.highScoreData != null && this.highScoreData.nickname != nickname) {
                     UpdateNickname(nickname, callback);
                 } else {
-                    Debug.Log("送信する必要ないよ！");
                     // 更新必要なし
                     callback(false);
                 }
