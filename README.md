@@ -10,20 +10,26 @@ Unity（C#）で NCMB REST API を叩くやつです。（WebGL向けに）
 
 ### Prefab
 
-梱包されている**RankingBoard**というプレファブを使えば、  
+梱包されている **RankingBoard** というプレファブを使えば、  
 ノンコーディングでランキング表示できます  
 （※ **uGUI** で構築されています）  
 スコアの送信自体は適宜行って下さい..
+
+### サンプルあれこれ
+
+なんとなくイメージをつかればとおもいサンプルもちらほらあります。  
+これは **Yoshinani.unitypackage.zip** には入っていないので  
+みてみたいという場合は **Source Code** の方をダウンロードしてください。
 
 ## セットアップ
 
 1. まずはNCMBアカウントつくってください！（すでにあるならSkip！）  
 2. そして新規にアプリを作ってください（すでにあるならSkip！）  
-3. つくったアプリのデータストアで**Scores**っていうクラスを作っておいてください（さしあたっては作るだけでいいです）  
-4. ここまででNCMBでの作業はおわり。つぎに、[ここ](https://github.com/anzfactory/Yoshinani/releases/latest)から**Yoshinani.unitypackage.zip**をダウンロードします  
+3. つくったアプリのデータストアで **Scores** っていうクラスを作っておいてください（さしあたっては作るだけでいいです）  
+4. ここまででNCMBでの作業はおわり。つぎに、[ここ](https://github.com/anzfactory/Yoshinani/releases/latest)から **Yoshinani.unitypackage.zip** をダウンロードします  
 5. 展開してプロジェクトにImportします  
 6. 適当にGameObjectを作って、`NCMBRanking`をアタッチ  
-7. Inspectorから**ApplicationKey**と**ClientKey**の両方を設定（これらはNCMBのアプリ設定に記載されています！）  
+7. Inspectorから **ApplicationKey** と **ClientKey** の両方を設定（これらはNCMBのアプリ設定に記載されています！）  
 8. 以上です！あとは、アタッチした`NCMBRanking`をつかってあれこれできます  
 
 
@@ -74,10 +80,20 @@ RankingBoardというプレファブの使い方
 
 デザインなんかは各々調整してくださいまし...
 
-## 補足（物足りない方向け）
+## 補足
 
-こちらで提供している機能以外の場合は`Xyz.Anzfactory.NCMBUtil.Yoshinani`を直接利用することで、  
-NCMB Rest Apiを利用することができます  
+### サンプルゲーム
+
+ミニゲームをサンプルとしていれてみました。  
+`RankingBoard`とか`NCMBRanking`とかの使うイメージをなんとなくつかめればなーと  
+もちろん、これはサンプルであって使い方はどうぞご自由に！  
+**Yoshinani.unitypackage.zip** にはサンプルは入っていないので  
+見たい場合は **Source Code** を落として下さい
+
+### REST APIを自分でたたきたい
+
+`NCMBRanking`で提供している機能以外の場合は`Xyz.Anzfactory.NCMBUtil.Yoshinani`を直接利用することで、  
+NCMB REST APIを利用することができます  
 Stagesっていうクラスを作ってデータを登録してあって、それを全取得したい場合は
 
 ```csharp
