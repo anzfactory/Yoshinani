@@ -12,7 +12,7 @@ Unity（C#）で NCMB REST API を叩くやつです。（WebGL向けに）
 
 梱包されている**RankingBoard**というプレファブを使えば、  
 ノンコーディングでランキング表示できます  
-（※**uGUI**で構築されています）  
+（※ **uGUI** で構築されています）  
 スコアの送信自体は適宜行って下さい..
 
 ## セットアップ
@@ -81,6 +81,10 @@ NCMB Rest Apiを利用することができます
 Stagesっていうクラスを作ってデータを登録してあって、それを全取得したい場合は
 
 ```csharp
+// 必ず先んじてセットアップ
+Yoshinani.Instance.Setup("YouApplicationKey", "YouClientKey");
+
+// Stagesからデータ取得
 Yoshinani.Instance.Call(Yoshinani.RequestType.Get, "classes/Stages", null, (isError, json) => {
     // jsonが結果なのであとは好きにデシリアライズしてください
 });
