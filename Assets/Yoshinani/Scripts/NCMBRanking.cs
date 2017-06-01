@@ -80,9 +80,13 @@ namespace Xyz.Anzfactory.NCMBUtil
         public void SendScore(float newScore, string nickname, bool isForce, Action<bool> callback)
         {
             if (!isForce && this.highScoreData != null && this.highScoreData.score >= newScore) {
-                Debug.Log("送信する必要ないよ！");
-                // 更新必要なし
-                callback(false);
+                if (this.highScoreData != null && this.highScoreData.nickname != nickname) {
+                    UpdateNickname(nickname, callback);
+                } else {
+                    Debug.Log("送信する必要ないよ！");
+                    // 更新必要なし
+                    callback(false);
+                }
                 return;
             }
 
