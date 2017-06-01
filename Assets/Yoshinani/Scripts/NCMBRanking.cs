@@ -43,14 +43,14 @@ namespace Xyz.Anzfactory.NCMBUtil
         private void Awake()
         {
             Yoshinani.Instance.Setup(this.ApplicationKey, this.ClientKey);
-        }
-
-        public void Start()
-        {
             var json = PlayerPrefs.GetString(PREFS_KEY_HIGH_SCORE_DATA, "");
             if (!string.IsNullOrEmpty(json)) {
                 this.highScoreData = JsonUtility.FromJson<Score>(json);
             }
+        }
+
+        public void Start()
+        {
         }
         #endregion
 
