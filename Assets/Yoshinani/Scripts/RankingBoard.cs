@@ -15,7 +15,7 @@ namespace Xyz.Anzfactory.NCMBUtil
     public class RankingBoard : MonoBehaviour
     {
         #region "Serialize Fields"
-        [SerializeField] private NCMBRanking ranking;
+        [SerializeField] public NCMBRanking ranking;
         [SerializeField] private GameObject content;
         [SerializeField] private RankingBoardItem itemTemplate;
         [SerializeField] private GameObject footer;
@@ -70,36 +70,14 @@ namespace Xyz.Anzfactory.NCMBUtil
             this.gameObject.SetActive(true);
 
             this.ranking.Top50(scoreList => {
+                this.BuildBoard(scoreList, fin);
+            });
+        }
 
-                this.ranking.SelfRank((isError, rank) => {
-                    this.selfRank.text = string.Format("あなたの順位は{0}位です", rank);
-                    this.selfRank.gameObject.SetActive(!isError);
-                });
-
-                for (int i = 0; i < Math.Min(scoreList.Count, this.items.Count); i++) {
-                    var score = scoreList[i];
-                    var scoreItem = this.items[i];
-                    scoreItem.Position = (i + 1);
-                    scoreItem.Score = score;
-                    scoreItem.gameObject.SetActive(true);
-                }
-
-                for (int i = this.items.Count; i < scoreList.Count; i++) {
-                    var score = scoreList[i];
-                    var scoreItem = GameObject.Instantiate<RankingBoardItem>(this.itemTemplate);
-                    scoreItem.Position = (i + 1);
-                    scoreItem.Score = score;
-                    scoreItem.gameObject.transform.SetParent(this.content.transform, false);
-                    scoreItem.gameObject.SetActive(true);
-                    this.items.Add(scoreItem);
-                }
-
-                this.footer.SetActive(true);
-
-                if (fin != null) {
-                    fin();
-                }
-
+        public void Reload(Action fin)
+        {
+            this.ranking.Top50(scoreList => {
+                this.BuildBoard(scoreList, fin);
             });
         }
 
@@ -117,6 +95,37 @@ namespace Xyz.Anzfactory.NCMBUtil
         #endregion
 
         #region "Private Methods"
+        private void BuildBoard(List<Score> scoreList, Action callback)
+        {
+            this.ranking.SelfRank((isError, rank) => {
+                this.selfRank.text = string.Format("あなたの順位は{0}位です", rank);
+                this.selfRank.gameObject.SetActive(!isError);
+            });
+
+            for (int i = 0; i < Math.Min(scoreList.Count, this.items.Count); i++) {
+                var score = scoreList[i];
+                var scoreItem = this.items[i];
+                scoreItem.Position = (i + 1);
+                scoreItem.Score = score;
+                scoreItem.gameObject.SetActive(true);
+            }
+
+            for (int i = this.items.Count; i < scoreList.Count; i++) {
+                var score = scoreList[i];
+                var scoreItem = GameObject.Instantiate<RankingBoardItem>(this.itemTemplate);
+                scoreItem.Position = (i + 1);
+                scoreItem.Score = score;
+                scoreItem.gameObject.transform.SetParent(this.content.transform, false);
+                scoreItem.gameObject.SetActive(true);
+                this.items.Add(scoreItem);
+            }
+
+            this.footer.SetActive(true);
+
+            if (callback != null) {
+                callback();
+            }
+        }
         #endregion
     }
 

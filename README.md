@@ -10,20 +10,26 @@ Unity（C#）で NCMB REST API を叩くやつです。（WebGL向けに）
 
 ### Prefab
 
-梱包されている**RankingBoard**というプレファブを使えば、  
+梱包されている **RankingBoard** というプレファブを使えば、  
 ノンコーディングでランキング表示できます  
-（※**uGUI**で構築されています）  
+（※ **uGUI** で構築されています）  
 スコアの送信自体は適宜行って下さい..
+
+### サンプルあれこれ
+
+なんとなくイメージをつかればとおもいサンプルもちらほらあります。  
+これは **Yoshinani.unitypackage.zip** には入っていないので  
+みてみたいという場合は **Source Code** の方をダウンロードしてください。
 
 ## セットアップ
 
 1. まずはNCMBアカウントつくってください！（すでにあるならSkip！）  
 2. そして新規にアプリを作ってください（すでにあるならSkip！）  
-3. つくったアプリのデータストアで**Scores**っていうクラスを作っておいてください（さしあたっては作るだけでいいです）  
-4. ここまででNCMBでの作業はおわり。つぎに、[ここ](https://github.com/anzfactory/Yoshinani/releases/latest)から**Yoshinani.unitypackage.zip**をダウンロードします  
+3. つくったアプリのデータストアで **Scores** っていうクラスを作っておいてください（さしあたっては作るだけでいいです）  
+4. ここまででNCMBでの作業はおわり。つぎに、[ここ](https://github.com/anzfactory/Yoshinani/releases/latest)から **Yoshinani.unitypackage.zip** をダウンロードします  
 5. 展開してプロジェクトにImportします  
 6. 適当にGameObjectを作って、`NCMBRanking`をアタッチ  
-7. Inspectorから**ApplicationKey**と**ClientKey**の両方を設定（これらはNCMBのアプリ設定に記載されています！）  
+7. Inspectorから **ApplicationKey** と **ClientKey** の両方を設定（これらはNCMBのアプリ設定に記載されています！）  
 8. 以上です！あとは、アタッチした`NCMBRanking`をつかってあれこれできます  
 
 
@@ -31,34 +37,36 @@ Unity（C#）で NCMB REST API を叩くやつです。（WebGL向けに）
 
 以下に簡単なサンプルコードを。
 
-    // こういう感じにアタッチさせておいて
-    [SerializeField] private NCMBRanking ncmbRanking;
+```csharp
+// こういう感じにアタッチさせておいて
+[SerializeField] private NCMBRanking ncmbRanking;
 
-    // スコア送信
-    // 第2引数のやつは更新を強制するかどうか
-    // false: ハイスコア更新時のみにスコアを送信する
-    // true : ハイスコア更新していなくてもスコアを送信する
-    this.ncmbRanking.SendScore(120f, false, (isError) => {
-        if (!isError) {
-            Debug.Log("スコア送信したよ！");
-        } else {
-            Debug.LogError("何らかの理由でスコア送信失敗！");
-        }
-    });
-    // スコア送信その２（スコアとニックネームを同時に送るタイプ）
-    // 第3引数のやつは更新を強制するかどうか
-    // false: ハイスコア更新時のみにスコアを送信する
-    // true : ハイスコア更新していなくてもスコアを送信する
-    this.ncmbRanking.SendScore(120f, "nickname", false, (isError) => {
-        // ...something...
-    });
+// スコア送信
+// 第2引数のやつは更新を強制するかどうか
+// false: ハイスコア更新時のみにスコアを送信する
+// true : ハイスコア更新していなくてもスコアを送信する
+this.ncmbRanking.SendScore(120f, false, (isError) => {
+    if (!isError) {
+        Debug.Log("スコア送信したよ！");
+    } else {
+        Debug.LogError("何らかの理由でスコア送信失敗！");
+    }
+});
+// スコア送信その２（スコアとニックネームを同時に送るタイプ）
+// 第3引数のやつは更新を強制するかどうか
+// false: ハイスコア更新時のみにスコアを送信する
+// true : ハイスコア更新していなくてもスコアを送信する
+this.ncmbRanking.SendScore(120f, "nickname", false, (isError) => {
+    // ...something...
+});
 
-    // トップ50取得
-    this.ncmbRanking.Top50((scoreList) => {
-        foreach (var score in scoreList) {
-            Debug.Log(string.Format("{0}: {1}", score.nickname, score.score.ToString()));
-        }
-    });
+// トップ50取得
+this.ncmbRanking.Top50((scoreList) => {
+    foreach (var score in scoreList) {
+        Debug.Log(string.Format("{0}: {1}", score.nickname, score.score.ToString()));
+    }
+});
+```
 
 ### RankingBoard
 
@@ -72,15 +80,31 @@ RankingBoardというプレファブの使い方
 
 デザインなんかは各々調整してくださいまし...
 
-## 補足（物足りない方向け）
+## 補足
 
-こちらで提供している機能以外の場合は`Xyz.Anzfactory.NCMBUtil.Yoshinani`を直接利用することで、  
-NCMB Rest Apiを利用することができます  
+### サンプルゲーム
+
+ミニゲームをサンプルとしていれてみました。  
+`RankingBoard`とか`NCMBRanking`とかの使うイメージをなんとなくつかめればなーと  
+もちろん、これはサンプルであって使い方はどうぞご自由に！  
+**Yoshinani.unitypackage.zip** にはサンプルは入っていないので  
+見たい場合は **Source Code** を落として下さい
+
+### REST APIを自分でたたきたい
+
+`NCMBRanking`で提供している機能以外の場合は`Xyz.Anzfactory.NCMBUtil.Yoshinani`を直接利用することで、  
+NCMB REST APIを利用することができます  
 Stagesっていうクラスを作ってデータを登録してあって、それを全取得したい場合は
 
-    Yoshinani.Instance.Call(Yoshinani.RequestType.Get, "classes/Stages", null, (isError, json) => {
-        // jsonが結果なのであとは好きにデシリアライズしてください
-    });
+```csharp
+// 必ず先んじてセットアップ
+Yoshinani.Instance.Setup("YouApplicationKey", "YouClientKey");
+
+// Stagesからデータ取得
+Yoshinani.Instance.Call(Yoshinani.RequestType.Get, "classes/Stages", null, (isError, json) => {
+    // jsonが結果なのであとは好きにデシリアライズしてください
+});
+```
 
 こういう感じになります。  
 条件などの指定は[NCMB RESTドキュメント](http://mb.cloud.nifty.com/doc/current/rest/common/query.html)当たりを参照してください。  

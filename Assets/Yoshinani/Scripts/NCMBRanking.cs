@@ -43,14 +43,14 @@ namespace Xyz.Anzfactory.NCMBUtil
         private void Awake()
         {
             Yoshinani.Instance.Setup(this.ApplicationKey, this.ClientKey);
-        }
-
-        public void Start()
-        {
             var json = PlayerPrefs.GetString(PREFS_KEY_HIGH_SCORE_DATA, "");
             if (!string.IsNullOrEmpty(json)) {
                 this.highScoreData = JsonUtility.FromJson<Score>(json);
             }
+        }
+
+        public void Start()
+        {
         }
         #endregion
 
@@ -80,9 +80,12 @@ namespace Xyz.Anzfactory.NCMBUtil
         public void SendScore(float newScore, string nickname, bool isForce, Action<bool> callback)
         {
             if (!isForce && this.highScoreData != null && this.highScoreData.score >= newScore) {
-                Debug.Log("送信する必要ないよ！");
-                // 更新必要なし
-                callback(false);
+                if (this.highScoreData != null && this.highScoreData.nickname != nickname) {
+                    UpdateNickname(nickname, callback);
+                } else {
+                    // 更新必要なし
+                    callback(false);
+                }
                 return;
             }
 
