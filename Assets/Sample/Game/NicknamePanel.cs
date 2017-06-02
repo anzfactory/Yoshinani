@@ -1,5 +1,5 @@
 ﻿/*********************************
- Score Canvas
+ ニックネーム更新パネル
 *********************************/
 using UnityEngine;
 using Xyz.Anzfactory.NCMBUtil;
@@ -7,11 +7,10 @@ using Xyz.Anzfactory.NCMBUtil;
 namespace Sample.Game
 {
 
-    public class ScoreCanvas : MonoBehaviour
+    public class NicknamePanel : MonoBehaviour
     {
         #region "Serialize Fields"
         [SerializeField] private RankingBoard rankingBoard;
-        [SerializeField] private NicknamePanel nicknamePanel;
         #endregion
 
         #region "Fields"
@@ -27,6 +26,7 @@ namespace Sample.Game
 
         private void Start()
         {
+            this.gameObject.SetActive(this.rankingBoard.ranking.HighScoreData != null && !string.IsNullOrEmpty(this.rankingBoard.ranking.HighScoreData.objectId));
         }
 
         private void Update()
@@ -40,14 +40,12 @@ namespace Sample.Game
         private void OnDestroy()
         {
         }
-
         #endregion
 
         #region "Public Methods"
         public void Show()
         {
-            this.rankingBoard.Show();
-            this.nicknamePanel.Show();
+            this.gameObject.SetActive(true);
         }
         #endregion
 
