@@ -3,17 +3,29 @@ Unity（C#）で NCMB REST API を叩くやつです。（WebGL向けに）
 
 ## できること
 
+### `NCMBRanking`スクリプト
+
 * スコアユーザのニックネーム変更（一度もスコア送信していない場合はエラーになる）  
 * スコア送信  
 * トップランカー取得  
 * ユーザ自身の順位取得  
 
+### `Capture`スクリプト
+
+* スクリーンショットを撮ってNCMBファイルストアへアップロード  
+* スクリーンショットを撮って新しいWindowで開く
+
+NCMBのファイルストアへアップロードしても、公開されるURLがわからないので使いみちはないかも...  
+（無料枠だと容量も潤沢にあるわけではないですし...）  
+新しいWindowで開くのはありとは思います。Webだと画像保存してツイートはそこまで手間じゃないとおもうので
+
 ### Prefab
 
 梱包されている **RankingBoard** というプレファブを使えば、  
+`NDMBRanking`を中でよしなにあれこれしているので、  
 ノンコーディングでランキング表示できます  
 （※ **uGUI** で構築されています）  
-スコアの送信自体は適宜行って下さい..
+スコアの送信自体は適宜行って下さい..  
 
 ### サンプルあれこれ
 
@@ -92,13 +104,14 @@ RankingBoardというプレファブの使い方
 
 ### REST APIを自分でたたきたい
 
-`NCMBRanking`で提供している機能以外の場合は`Xyz.Anzfactory.NCMBUtil.Yoshinani`を直接利用することで、  
+`NCMBRanking`で提供している機能以外を使用する場合は`Xyz.Anzfactory.NCMBUtil.Yoshinani`を直接利用することで、  
 NCMB REST APIを利用することができます  
+例えば...  
 Stagesっていうクラスを作ってデータを登録してあって、それを全取得したい場合は
 
 ```csharp
 // 必ず先んじてセットアップ
-Yoshinani.Instance.Setup("YouApplicationKey", "YouClientKey");
+Yoshinani.Instance.Setup("YourApplicationKey", "YourClientKey");
 
 // Stagesからデータ取得
 Yoshinani.Instance.Call(Yoshinani.RequestType.Get, "classes/Stages", null, (isError, json) => {
