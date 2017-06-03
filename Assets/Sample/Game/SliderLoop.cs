@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Sample.Game
 {
-
+    
     public class SliderLoop : MonoBehaviour
     {
         #region "Serialize Fields"
