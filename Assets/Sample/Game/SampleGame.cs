@@ -16,6 +16,7 @@ namespace Sample.Game
         [SerializeField] private RankingBoard rankingBoard;
         [SerializeField] private GameObject nicknamePanel;
         [SerializeField] private InputField nicknameField;
+        [SerializeField] private Capture capture;
         #endregion
 
         #region "LifeCycle"
@@ -66,6 +67,18 @@ namespace Sample.Game
         public void OnClickRetryButton()
         {
             SceneManager.LoadScene("StopBarGame");
+        }
+
+        /// <summary>
+        /// スクリーンショットボタンクリックイベント
+        /// </summary>
+        public void OnClickScreenShot()
+        {
+            if (Application.platform == RuntimePlatform.WebGLPlayer) {
+                this.capture.TakeAndOpenImageWindow();
+            } else {
+                Debug.Log("WebGLで書き出した時に動くよ！");
+            }
         }
         #endregion
 
