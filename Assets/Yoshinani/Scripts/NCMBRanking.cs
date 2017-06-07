@@ -65,9 +65,17 @@ namespace Xyz.Anzfactory.NCMBUtil
             var putData = new Yoshinani.RequestData();
             putData.AddParam("nickname", nickname);
             Yoshinani.Instance.Call(Yoshinani.RequestType.PUT, string.Format("{0}/{1}", ApiPath.Scores.Val(), this.highScoreData.objectId), putData, (isError, json) => {
-                this.highScoreData.nickname = nickname;
-                PlayerPrefs.SetString(PREFS_KEY_HIGH_SCORE_DATA, JsonUtility.ToJson(this.highScoreData));
-                PlayerPrefs.Save();
+                if (!isError) {
+                    var result = MiniJSON.Json.Deserialize(json) as Dictionary<string, object>;
+                    isError = result == null || !result.ContainsKey("updateDate");
+                    if (isError) {
+                        Debug.LogError(json);
+                    } else {
+                        this.highScoreData.nickname = nickname;
+                        PlayerPrefs.SetString(PREFS_KEY_HIGH_SCORE_DATA, JsonUtility.ToJson(this.highScoreData));
+                        PlayerPrefs.Save();
+                    }
+                }
                 callback(isError);
             });
         }
@@ -110,7 +118,8 @@ namespace Xyz.Anzfactory.NCMBUtil
                         this.highScoreData = new Score();
                         this.highScoreData.objectId = result["objectId"].ToString();
                         fin(newScore, nickname);
-                    } else {
+                    } else if (!isError) {
+                        Debug.LogError(json);
                         isError = true;
                     }
                     callback(isError);
@@ -118,8 +127,12 @@ namespace Xyz.Anzfactory.NCMBUtil
             } else {
                 // 更新
                 Yoshinani.Instance.Call(Yoshinani.RequestType.PUT, string.Format("{0}/{1}", ApiPath.Scores.Val(), this.highScoreData.objectId), scoreData, (isError, json) => {
-                    if (!isError) {
+                    var result = MiniJSON.Json.Deserialize(json) as Dictionary<string, object>;
+                    if (!isError && result.ContainsKey("updateDate")) {
                         fin(newScore, nickname);
+                    } else if (!isError) {
+                        Debug.LogError(json);
+                        isError = true;
                     }
                     callback(isError);
                 });
@@ -153,8 +166,13 @@ namespace Xyz.Anzfactory.NCMBUtil
             requestData.Count = true;    // Count()するという指示
             Yoshinani.Instance.Call(Yoshinani.RequestType.GET, ApiPath.Scores.Val(), requestData, (isError, json) => {
                 if (!isError) {
-                    Dictionary<string, object> result = MiniJSON.Json.Deserialize(json) as Dictionary<string, object>;
-                    callback(false, int.Parse(result["count"].ToString()) + 1);
+                    var result = MiniJSON.Json.Deserialize(json) as Dictionary<string, object>;
+                    if (result.ContainsKey("count")) {
+                        callback(false, int.Parse(result["count"].ToString()) + 1);
+                    } else {
+                        Debug.LogError(json);
+                        callback(true, 0);
+                    }
                 } else {
                     callback(true, 0);
                 }
