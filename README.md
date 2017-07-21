@@ -1,3 +1,12 @@
+# 注意事項 2017.07.21
+
+このリポは**非推奨**です。  
+よりオフィシャルに近いところで開発が進んでいるのでそちらをお使い下さい。  
+
+[LeaderboardForUnityWebGL](https://github.com/NCMBMania/LeaderboardForUnityWebGL)
+
+WebGLに正式に対応するというアナウンスもあったので、楽しみですね！
+
 # Yoshinani
 Unity（C#）で NCMB REST API を叩くやつです。（WebGL向けに）
 
@@ -122,8 +131,8 @@ Yoshinani.Instance.Call(Yoshinani.RequestType.Get, "classes/Stages", null, (isEr
 こういう感じになります。  
 条件などの指定は[NCMB RESTドキュメント](http://mb.cloud.nifty.com/doc/current/rest/common/query.html)当たりを参照してください。  
 （`NCMBRanking`の`SelfRank()`あたりも参考になるかも）
-    
-    
+
+
 
 ## CREDIT
 
